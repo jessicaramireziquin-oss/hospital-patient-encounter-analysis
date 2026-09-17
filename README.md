@@ -51,7 +51,6 @@ View the interactive dashboard on Tableau Public: [Hospital Patient Encounter An
 ![Dashboard Preview](dashboard-screenshot.png)<img width="1317" height="1726" alt="dashboard-screenshot png " src="https://github.com/user-attachments/assets/2a40365d-42a5-40c3-9b80-201ed56ae2a5" />
 
 
-
 ## Files in This Repo
 - `HOSPITAL_ANALYTIC_QUESTIONS_ANSWERS.sql` — SQL scripts used for the analysis
 - `README.md` — project overview (this file)
