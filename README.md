@@ -8,8 +8,7 @@ This project uses SQL to answer a set of business questions around hospital enco
 
 ## Tools Used
 - **SQL** — data querying and analysis
-- **Tableau** — dashboard and data visualization<img width="1317" height="1726" alt="dashboard-screenshot png " src="https://github.com/user-attachments/assets/c8555615-5ab2-44e1-a05e-a0aa92c42cc4" />
-
+- **Tableau** — dashboard and data visualization
 
 ## Data Source
 [Hospital Patient Records](https://www.mavenanalytics.io/) dataset, sourced from Maven Analytics.
@@ -47,8 +46,7 @@ This project uses SQL to answer a set of business questions around hospital enco
 View the interactive dashboard on Tableau Public: [Hospital Patient Encounter Analysis Dashboard](https://public.tableau.com/views/HospitalPatientEncounterAnalysisDescriptiveAnalysis/Dashboard1?:language=en-US&:sid=&:redirect=auth&:display_count=n&:origin=viz_share_link)
 
 
-```
-![Dashboard Preview](dashboard-screenshot.png)<img width="1317" height="1726" alt="dashboard-screenshot png " src="https://github.com/user-attachments/assets/2a40365d-42a5-40c3-9b80-201ed56ae2a5" />
+<img width="1317" height="1726" alt="dashboard-screenshot png " src="https://github.com/user-attachments/assets/2a40365d-42a5-40c3-9b80-201ed56ae2a5" />
 
 
 ## Files in This Repo
