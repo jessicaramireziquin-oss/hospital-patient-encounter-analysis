@@ -46,7 +46,6 @@ This project uses SQL to answer a set of business questions around hospital enco
 ## Dashboard
 View the interactive dashboard on Tableau Public: [Hospital Patient Encounter Analysis Dashboard](https://public.tableau.com/views/HospitalPatientEncounterAnalysisDescriptiveAnalysis/Dashboard1?:language=en-US&:sid=&:redirect=auth&:display_count=n&:origin=viz_share_link)
 
-*(Optional: add a screenshot of the dashboard here too, so it's visible directly on GitHub without needing to click through.)*
 
 ```
 ![Dashboard Preview](dashboard-screenshot.png)<img width="1317" height="1726" alt="dashboard-screenshot png " src="https://github.com/user-attachments/assets/2a40365d-42a5-40c3-9b80-201ed56ae2a5" />
