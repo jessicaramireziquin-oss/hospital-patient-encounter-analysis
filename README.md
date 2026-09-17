@@ -9,7 +9,6 @@ This project uses SQL to answer a set of business questions around hospital enco
 ## Tools Used
 - **SQL** — data querying and analysis
 - **Tableau** — dashboard and data visualization<img width="1317" height="1726" alt="dashboard-screenshot png " src="https://github.com/user-attachments/assets/c8555615-5ab2-44e1-a05e-a0aa92c42cc4" />
-<img width="1317" height="1726" alt="dashboard-screenshot png " src="https://github.com/user-attachments/assets/905aff03-f8ea-4205-b4ed-3501af3a84ad" />
 
 
 ## Data Source
