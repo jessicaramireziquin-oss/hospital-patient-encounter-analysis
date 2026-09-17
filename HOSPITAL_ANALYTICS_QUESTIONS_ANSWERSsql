@@ -1,0 +1,309 @@
+-- HOSPITAL ANALYTICS QUESTIONS + ANSWERS
+
+-- OBJECTIVE 1: ENCOUNTERS OVERVIEW
+-- a. How many total encounters occurred each year?
+
+-- b. For each year, what percentage of all encounters belonged to each encounter class
+-- (ambulatory, outpatient, wellness, urgent care, emergency, and inpatient)?
+
+-- c. What percentage of encounters were over 24 hours versus under 24 hours?
+
+-- INSIGHT ANSWERS 
+
+-- 1a)
+
+USE hospital_db;
+SELECT 
+YEAR(START) AS encounter_year,
+COUNT(*) AS total_encounters
+FROM encounters
+GROUP BY YEAR(START)
+ORDER BY encounter_year;
+
+-- Insight:
+-- Encounter volume peaked in 2014 with 3,885 encounters.
+-- Recorded encounters declined after 2014 before increasing again in 2020-2021.
+-- 2022 has only 220 recorded encounters, suggesting the year may be incomplete.
+
+-- 1b)
+SELECT
+    YEAR(START) AS encounter_year,
+    ENCOUNTERCLASS,
+    COUNT(*) AS encounter_count,
+    ROUND(
+        COUNT(*) * 100.0 /
+        SUM(COUNT(*)) OVER (PARTITION BY YEAR(START)),
+        2
+    ) AS percentage_of_year
+FROM encounters
+GROUP BY YEAR(START), ENCOUNTERCLASS
+ORDER BY encounter_year, ENCOUNTERCLASS;
+
+-- Insight:
+-- Ambulatory encounters were the dominant encounter class in most years,
+-- reaching a peak of 60.26% in 2014. Their share declined over time,
+-- reaching 36.91% in 2021, while outpatient encounters increased to
+-- 40.17% in 2021 and became the largest encounter class that year.
+-- Emergency and inpatient encounters remained comparatively smaller
+-- portions of total encounters.
+
+-- 1c)
+SELECT
+    CASE
+        WHEN TIMESTAMPDIFF(HOUR, START, STOP) >= 24
+            THEN '24 hours or more'
+        ELSE 'Under 24 hours'
+    END AS encounter_duration,
+    COUNT(*) AS encounter_count,
+    ROUND(
+        COUNT(*) * 100.0 / (SELECT COUNT(*) FROM encounters),
+        2
+    ) AS percentage_of_total
+FROM encounters
+GROUP BY encounter_duration;
+
+-- Insight:
+-- Ambulatory encounters were the dominant encounter class in most years,
+-- reaching a peak of 60.26% in 2014. Their share declined over time,
+-- reaching 36.91% in 2021, while outpatient encounters increased to
+-- 40.17% in 2021 and became the largest encounter class that year.
+-- Emergency and inpatient encounters remained comparatively smaller
+-- portions of total encounters.
+
+
+-- OBJECTIVE 2: COST & COVERAGE INSIGHTS
+
+-- a. How many encounters had zero payer coverage, and what percentage of total encounters does this represent?
+
+-- b. What are the top 10 most frequent procedures performed and the average base cost for each?
+
+-- c. What are the top 10 procedures with the highest average base cost and the number of times they were performed?
+
+-- d. What is the average total claim cost for encounters, broken down by payer?
+
+-- 2a)
+
+SELECT COUNT(*) AS zero_payer_coverage_count
+FROM encounters
+WHERE PAYER_COVERAGE = 0;
+
+SELECT 
+	COUNT(*) AS zero_payer_coverage_count,
+    (COUNT(*) * 100.0 / (
+		SELECT COUNT(*)
+        FROM encounters
+	)) AS percentage_of_total
+FROM encounters
+WHERE PAYER_COVERAGE = 0;
+
+-- Insight:
+-- 13586 had zero payer coverage, representing 48.71% of all 27,891 encounters.
+
+-- 2b)
+SELECT
+    DESCRIPTION AS procedure_name,
+    COUNT(*) AS number_performed,
+    AVG(BASE_COST) AS average_base_cost
+FROM procedures
+GROUP BY DESCRIPTION
+ORDER BY COUNT(*) DESC
+LIMIT 10;
+
+SELECT
+    BASE_COST,
+    COUNT(*) AS number_of_procedures
+FROM procedures
+GROUP BY BASE_COST
+ORDER BY number_of_procedures DESC
+LIMIT 10;
+
+-- Insight:
+-- Assessment of health and social care needs was the most frequently
+-- performed procedure, with 4,596 occurrences. Hospice care followed
+-- with 4,098 occurrences. Most of the top 10 procedures had an average
+-- base cost of $431, reflecting the fact that $431 was the most common
+-- base cost in the dataset. Renal dialysis stood out with a substantially
+-- higher average base cost of approximately $1,004.
+
+-- 1c)
+SELECT
+	DESCRIPTION AS procedure_name,
+	AVG(BASE_COST) AS average_base_cost,
+    COUNT(*) AS number_performed
+FROM procedures
+GROUP BY DESCRIPTION
+ORDER BY average_base_cost DESC
+LIMIT 10;
+
+-- Insight:
+-- Admit to ICU had the highest average base cost at $206,260.40,
+-- but it was performed only 5 times. Electrical cardioversion was
+-- performed much more frequently (1,383 times) with an average base
+-- cost of $25,903.11.
+
+SELECT
+    P.NAME AS payer_name,
+    AVG(EP.TOTAL_CLAIM_COST) AS average_total_claim_cost
+FROM encounters AS EP
+JOIN payers AS P
+    ON EP.PAYER = P.Id
+GROUP BY P.NAME;
+
+-- Insight:
+-- Medicaid had the highest average total claim cost at approximately
+-- $6,205, followed by patients with no insurance at approximately
+-- $5,593. Dual Eligible had the lowest average total claim cost
+-- at approximately $1,696.
+
+-- OBJECTIVE 3: PATIENT BEHAVIOR ANALYSIS
+
+-- a. How many unique patients were admitted each quarter over time?
+
+-- b. How many patients were readmitted within 30 days of a previous encounter?
+
+-- c. Which patients had the most readmissions?
+
+
+-- 3a)
+SELECT
+    YEAR(START) AS year_start,
+    QUARTER(START) AS quarter_start,
+    COUNT(DISTINCT PATIENT) AS unique_patients
+FROM encounters
+GROUP BY
+    YEAR(START),
+    QUARTER(START)
+ORDER BY
+    YEAR(START),
+    QUARTER(START);
+
+-- Insight:
+-- Unique patient volume increased from 2011 through the early years of
+-- the dataset, with notable spikes in 2014 Q1 (394 patients) and
+-- 2021 Q1-Q2 (417 and 414 patients). Patient volume was relatively
+-- stable from 2015 through 2020, generally ranging from approximately
+-- 225 to 260 unique patients per quarter. The 2022 data appears
+-- incomplete, with only 103 unique patients recorded in Q1.
+
+-- 3b)
+SELECT
+    PATIENT,
+    START,
+    LAG(START) OVER (
+        PARTITION BY PATIENT
+        ORDER BY START
+    ) AS previous_encounter
+FROM encounters;
+    
+    WITH encounter_history AS (
+    SELECT
+        PATIENT,
+        START,
+        LAG(START) OVER (
+            PARTITION BY PATIENT
+            ORDER BY START
+        ) AS previous_encounter
+    FROM encounters
+)
+SELECT
+    PATIENT,
+    START,
+    previous_encounter,
+    DATEDIFF(START, previous_encounter) AS days_since_previous
+FROM encounter_history;
+
+
+WITH encounter_history AS (
+    SELECT
+        PATIENT,
+        START,
+        LAG(START) OVER (
+            PARTITION BY PATIENT
+            ORDER BY START
+        ) AS previous_encounter
+    FROM encounters
+),
+readmissions AS (
+    SELECT
+        PATIENT,
+        START,
+        previous_encounter,
+        DATEDIFF(START, previous_encounter) AS days_since_previous
+    FROM encounter_history
+)
+SELECT
+    COUNT(DISTINCT PATIENT) AS patients_readmitted_within_30_days
+FROM readmissions
+WHERE days_since_previous <= 30;
+
+-- Insight:
+-- 772 unique patients had a subsequent encounter within 30 days
+-- of a previous encounter, indicating a measurable level of
+-- short-term readmission in the dataset.
+
+-- 3c)
+WITH encounter_history AS (
+    SELECT
+        PATIENT,
+        START,
+        LAG(START) OVER (
+            PARTITION BY PATIENT
+            ORDER BY START
+        ) AS previous_encounter
+    FROM encounters
+),
+readmissions AS (
+    SELECT
+        PATIENT,
+        START,
+        previous_encounter,
+        DATEDIFF(START, previous_encounter) AS days_since_previous
+    FROM encounter_history
+)
+SELECT
+    PATIENT,
+    COUNT(*) AS readmission_count
+FROM readmissions
+WHERE days_since_previous <= 30
+GROUP BY PATIENT
+ORDER BY readmission_count DESC;
+    
+    WITH encounter_history AS (
+    SELECT
+        PATIENT,
+        START,
+        LAG(START) OVER (
+            PARTITION BY PATIENT
+            ORDER BY START
+        ) AS previous_encounter
+    FROM encounters
+),
+readmissions AS (
+    SELECT
+        PATIENT,
+        START,
+        previous_encounter,
+        DATEDIFF(START, previous_encounter) AS days_since_previous
+    FROM encounter_history
+)
+SELECT
+    P.First AS first_name,
+    P.Last AS last_name,
+    COUNT(*) AS readmission_count
+FROM readmissions AS R
+JOIN patients AS P
+    ON R.PATIENT = P.Id
+WHERE R.days_since_previous <= 30
+GROUP BY
+    P.Id,
+    P.First,
+    P.Last
+ORDER BY
+    readmission_count DESC;
+    
+    -- Insight:
+-- Kimberly Collier had the highest number of encounters occurring
+-- within 30 days of a previous encounter, with 1,376 qualifying
+-- readmissions. Mariano O'Kon and Shani Parisian followed with
+-- 876 and 871 respectively.
+    
